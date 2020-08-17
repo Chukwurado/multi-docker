@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t chukwurado/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true chukwurado/react-test npm run test
+
+after_success:
+    - docker build -t chukwurado/multi-client ./client
+    - docker build -t chukwurado/multi-nginx ./nginx
+    - docker build -t chukwurado/multi-server ./server
+    - docker build -t chukwurado/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Push those images to docker hub
+    - docker push chukwurado/multi-client
+    - docker push chukwurado/multi-nginx
+    - docker push chukwurado/multi-server
+    - docker push chukwurado/multi-worker
